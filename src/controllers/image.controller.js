@@ -1,15 +1,24 @@
 import pool from "../config/db.js";
-const getImages = (req, res) => {
+const getImages = async (req, res) => {
+  const result = await pool.query("SELECT * FROM images");
+
   res.json({
     message: "All images",
+    data: result.rows,
   });
 };
 
-const getImagesById = (req, res) => {
+const getImagesById = async (req, res) => {
   const id = req.params.id;
+  const result = await pool.query("SELECT * FROM images WHERE id=$1", [id]);
+  if (result.rows.length === 0) {
+    return res.status(404).json({
+      message: "Image Not Found",
+    });
+  }
   res.json({
     message: "Image found",
-    imageId: id,
+    data: result.rows[0],
   });
 };
 
