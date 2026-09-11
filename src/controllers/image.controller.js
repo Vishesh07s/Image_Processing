@@ -1,4 +1,8 @@
 import pool from "../config/db.js";
+import fs from "fs/promises";
+import path from "path";
+import { projectRoot } from "../utils/path.js";
+
 const getImages = async (req, res) => {
   const result = await pool.query("SELECT * FROM images");
 
@@ -43,4 +47,29 @@ const createImage = async (req, res) => {
   });
 };
 
-export { getImages, getImagesById, createImage };
+const deleteImage = async (req, res) => {
+  const id = req.params.id;
+  const result = await pool.query("SELECT * FROM images WHERE id = $1", [id]);
+  if (result.rows.length == 0) {
+    return res.status(404).json({
+      message: "Image Not Found",
+    });
+  }
+  const image = result.rows[0];
+  const filePath = path.join(projectRoot, image.path);
+  try {
+    await fs.unlink(filePath);
+  } catch (err) {
+    console.error("File deletion failed:", err.message);
+    return res.status(500).json({
+      message: "Failed to delete image file",
+    });
+  }
+
+  await pool.query("DELETE FROM images WHERE id=$1", [id]);
+  return res.status(200).json({
+    message: "Image deleted successfully",
+  });
+};
+
+export { getImages, getImagesById, createImage, deleteImage };
