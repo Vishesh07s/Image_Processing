@@ -26,10 +26,11 @@ const worker = new Worker(
         throw new Error(`Image not found: ${imageId}`);
       }
 
-      console.log(result.rows);
+      // console.log(result.rows);
       const image = result.rows[0];
       const inputPath = path.join(uploadsPath, image.filename);
       //this path will be used by sharp for img manipulation
+
       const outputPath = path.join(processedPath, `image-${image.id}.jpg`);
       //this path will store resized image after sharp has done its work
       console.log("Starting Sharp:", inputPath, "->", outputPath);
@@ -41,7 +42,7 @@ const worker = new Worker(
       console.log("Sharp processing finished");
       await pool.query("UPDATE images SET processed_path = $1 WHERE id = $2", [
         outputPath,
-        image.id,
+        image.id, //adding output image path to processedpath column
       ]);
       await pool.query("UPDATE images SET status = 'completed' WHERE id = $1", [
         imageId,
@@ -61,8 +62,6 @@ const worker = new Worker(
       }
       throw err;
     }
-
-    //adding output image path to processedpath column
   },
   {
     connection: {
