@@ -2,6 +2,7 @@ import pool from "../config/db.js";
 import fs from "fs/promises";
 import path from "path";
 import { projectRoot } from "../utils/path.js";
+import imageQueue from "../queues/image.queue.js";
 
 const getImages = async (req, res) => {
   const result = await pool.query("SELECT * FROM images");
@@ -72,4 +73,26 @@ const deleteImage = async (req, res) => {
   });
 };
 
-export { getImages, getImagesById, createImage, deleteImage };
+const getJobStatus = async (req, res) => {
+  const jobId = req.params.id;
+  const job = await imageQueue.getJob(jobId);
+  if (!job) {
+    return res.status(404).json({
+      message: "Job not found",
+    });
+  }
+  const state = await job.getState();
+  const progress = job.progress;
+
+  return res.status(200).json({
+    message: "Job status fetched successfully",
+    data: {
+      jobId: job.id,
+      state: state,
+      progress: progress,
+      attemptsMade: job.attemptsMade,
+    },
+  });
+};
+
+export { getImages, getImagesById, createImage, deleteImage, getJobStatus };

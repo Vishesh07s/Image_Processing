@@ -10,12 +10,9 @@ const worker = new Worker(
   async (job) => {
     const { imageId } = job.data;
 
-    try {
-      await pool.query(
-        "UPDATE images SET status = 'processing' WHERE id = $1",
-        [imageId],
-      );
+    await job.updateProgress(0);
 
+    try {
       const result = await pool.query(
         `SELECT id,filename,path,mimetype
       FROM images
@@ -25,6 +22,14 @@ const worker = new Worker(
       if (result.rows.length === 0) {
         throw new Error(`Image not found: ${imageId}`);
       }
+
+      await pool.query(
+        "UPDATE images SET status = 'processing' WHERE id = $1",
+        [imageId],
+      );
+
+      await job.updateProgress(25);
+      console.log("Progress updated:", job.progress);
 
       // console.log(result.rows);
       const image = result.rows[0];
@@ -39,6 +44,7 @@ const worker = new Worker(
         .resize(500, 324, { fit: "cover" })
         .jpeg({ quality: 80 })
         .toFile(outputPath);
+      await job.updateProgress(75);
       console.log("Sharp processing finished");
       await pool.query("UPDATE images SET processed_path = $1 WHERE id = $2", [
         outputPath,
@@ -47,6 +53,7 @@ const worker = new Worker(
       await pool.query("UPDATE images SET status = 'completed' WHERE id = $1", [
         imageId,
       ]);
+      await job.updateProgress(100);
       return {
         imageId: image.id,
         outputPath: outputPath,

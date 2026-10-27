@@ -13,7 +13,7 @@ try {
 }
 
 const outputPath = path.join(uploadsPath, "resized-image.jpg");
-const processedPath = path.join(uploadsPath, "processed");
-await sharp(inputPath).resize(500).toFile(outputPath); //aspect ratio remains the same so height is automatically calcualted by sharp
+
+await sharp(inputPath).resize(500).toFile(outputPath); //aspect ratio remains the same so height is automatically calcualted by sharp 
 
 console.log("resized image saved:", outputPath);

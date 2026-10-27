@@ -28,9 +28,20 @@ console.log("Job added: ", job.id);
 
 console.log("Attempts made:", job.attemptsMade);
 console.log("Job state: ", await job.getState()); //state retrieve is an asynchronous operation
+console.log("Initial Progress:", job.progress);
+try {
+  const result = await job.waitUntilFinished(queueEvents);
+  //result  will contain what worker returned in image.worker.js file
+  console.log("Processing result:", result);
+} catch (err) {
+  console.error("job failed:", err.message);
+}
+const freshJob = await imageQueue.getJob(job.id);
+console.log("Final progress:", freshJob.progress);
+console.log("Attempts made:", freshJob.attemptsMade);
+console.log("Job state: ", await job.getState());
 
-const result = await job.waitUntilFinished(queueEvents);
-//result  will contain what worker returned in image.worker.js file
-console.log("Processing result:", result);
+await queueEvents.close();
+await imageQueue.close();
 
 // Short mein: Worker ka processor result deta hai → BullMQ completion event publish karta hai → Redis use carry karta hai → QueueEvents receive karta hai → waitUntilFinished() ko pata chal jaata hai.

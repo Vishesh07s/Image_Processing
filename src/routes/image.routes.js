@@ -6,6 +6,7 @@ import {
   getImagesById,
   createImage,
   deleteImage,
+  getJobStatus,
 } from "../controllers/image.controller.js";
 const router = express.Router();
 const upload = multer({
@@ -30,4 +31,5 @@ router.get("/:id", getImagesById);
 //upload.single("image") returns a middleware that handles file upload
 router.post("/", upload.single("image"), createImage);
 router.delete("/:id", deleteImage);
+router.get("/jobs/:id", getJobStatus);
 export default router;
