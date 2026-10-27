@@ -95,4 +95,24 @@ const getJobStatus = async (req, res) => {
   });
 };
 
+const processImage = async (req, res) => {
+  const imageId = req.params.id;
+  const result = await pool.query("SELECT id FROM images WHERE id = $1", [
+    imageId,
+  ]);
+  if (result.rows.length === 0) {
+    return res.status(404).json({
+      message: "Image not found",
+    });
+  }
+  const job = await imageQueue.add("resize-image", { imageId }); //resize image is job name
+  return res.status(202).json({
+    message: "Image processing queued successfully",
+    data: {
+      imageId: imageId,
+      jobId: job.id,
+    },
+  });
+};
+
 export { getImages, getImagesById, createImage, deleteImage, getJobStatus };
